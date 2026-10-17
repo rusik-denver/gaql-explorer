@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gaql-explorer"
+version = "0.1.0"
+description = "CLI and web tool for exploring Google Ads data via GAQL"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Ruslan Danelian", email = "rusik.denver@gmail.com" },
+]
+keywords = ["google-ads", "gaql", "ppc", "advertising", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business",
+]
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+    "google-ads>=24.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+web = ["flask>=3.0"]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[project.scripts]
+gaql = "gaql_explorer.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/ruslandanelian/gaql-explorer"
+Issues = "https://github.com/ruslandanelian/gaql-explorer/issues"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
