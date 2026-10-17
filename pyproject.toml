@@ -24,11 +24,11 @@ classifiers = [
 dependencies = [
     "click>=8.1",
     "rich>=13.0",
-    "google-ads>=24.0",
     "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
+api = ["google-ads>=24.0"]
 web = ["flask>=3.0"]
 dev = ["pytest>=8.0", "ruff>=0.4"]
 

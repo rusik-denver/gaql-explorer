@@ -3,15 +3,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg)](https://www.python.org)
 
-A CLI toolkit for exploring Google Ads data via GAQL (Google Ads Query Language). Ships with 17 battle-tested query templates, rich terminal output, and a demo mode that works without any credentials.
+A CLI toolkit and web UI for exploring Google Ads data via GAQL (Google Ads Query Language). Ships with 17 battle-tested query templates, rich terminal output, and a demo mode that works without any credentials.
 
 Built for PPC auditors, media buyers, and anyone who speaks GAQL.
 
 ## Features
 
-- **17 query templates** organized by audit category — campaign performance, search terms, keywords, geo, ad copy, quality scores
+- **17 query templates** organized by audit category — campaign performance, search terms, keywords, geo, ad copy, quality scores, negatives
 - **Demo mode** — realistic mock data (no credentials needed) for learning GAQL and testing workflows
 - **Rich terminal output** — formatted tables, JSON, or CSV export
+- **Web UI** — browser-based query explorer with template cards and live results
 - **Live mode** — query real Google Ads accounts via the API
 - **Template browser** — search and preview templates by name or category
 
@@ -20,14 +21,23 @@ Built for PPC auditors, media buyers, and anyone who speaks GAQL.
 ### Install
 
 ```bash
-pip install -e .
+pip install gaql-explorer
+
+# With web UI
+pip install 'gaql-explorer[web]'
+
+# With live API support
+pip install 'gaql-explorer[api]'
+
+# Everything
+pip install 'gaql-explorer[api,web]'
 ```
 
 ### Run in Demo Mode
 
 ```bash
 # Execute a raw GAQL query against demo data
-gaql query "SELECT campaign.name, metrics.cost_micros FROM campaign" --demo
+gaql query "SELECT campaign.name, metrics.cost_micros FROM campaign ORDER BY metrics.cost_micros DESC" --demo
 
 # List all query templates
 gaql templates --list
@@ -52,19 +62,31 @@ gaql accounts
 gaql query "SELECT campaign.name, metrics.clicks FROM campaign WHERE segments.date DURING LAST_7_DAYS" -c 123-456-7890
 
 # Run a template and export to CSV
-gaql templates wasted_spend_terms -c 123-456-7890 -f csv -o wasted.csv
+gaql templates wasted_search_terms -c 123-456-7890 -f csv -o wasted.csv
 ```
+
+### Web UI
+
+```bash
+pip install 'gaql-explorer[web]'
+python -m gaql_explorer.web
+# Open http://127.0.0.1:5000
+```
+
+Click any template card to load and run its query, or write your own GAQL in the editor.
 
 ## Template Categories
 
-| Category | Templates | Use Case |
-|----------|-----------|----------|
-| Campaign Performance | 3 | Spend analysis, budget pacing, bidding strategy review |
-| Search Terms | 3 | Wasted spend detection, converting term mining |
-| Keywords | 3 | Quality score audit, bid optimization, match type analysis |
-| Geographic | 2 | City-level performance, geo exclusion candidates |
-| Ad Copy | 3 | RSA performance, headline/description effectiveness |
-| Quality & Health | 3 | Low QS keywords, landing page issues, account health |
+| Category | Count | Use Case |
+|----------|-------|----------|
+| Campaign Performance | 4 | Spend analysis, conversions, device splits, hourly patterns |
+| Budget Utilization | 1 | Budget vs. spend, impression share gaps |
+| Search Term Analysis | 3 | Wasted spend detection, converting term mining, match leakage |
+| Quality Score | 1 | QS components by keyword for optimization |
+| Keyword Metrics | 2 | Bid landscape, low-impression keyword cleanup |
+| Geographic Performance | 2 | City-level performance, geo exclusion candidates |
+| Ad Copy Performance | 2 | RSA asset ratings, landing page metrics |
+| Negative Keyword Audit | 2 | Campaign negatives, shared list coverage |
 
 ## Output Formats
 
@@ -79,44 +101,35 @@ gaql query "..." --demo -f json
 gaql query "..." --demo -f csv -o report.csv
 ```
 
+## As a Library
+
+```python
+from gaql_explorer.templates import TEMPLATES, get_by_name
+from gaql_explorer.demo_data import resolve_query
+from gaql_explorer.formatter import print_table
+
+# Run a template against demo data
+template = get_by_name("wasted_search_terms")
+headers, rows = resolve_query(template.query)
+print_table(headers, rows)
+
+# Live API
+from gaql_explorer.client import GoogleAdsClient
+client = GoogleAdsClient()
+headers, rows = client.query("1234567890", template.query)
+```
+
 ## Project Structure
 
 ```
 src/gaql_explorer/
-├── __init__.py       # Package metadata
-├── cli.py            # Click CLI commands
-├── client.py         # Google Ads API wrapper
-├── demo_data.py      # Realistic mock data
-├── formatter.py      # Table/JSON/CSV output
-└── templates.py      # 17 GAQL query templates
-```
-
-## Example Session
-
-```
-$ gaql templates wasted_spend_terms --demo
-
-╭─ Template ──────────────────────────────────────────────╮
-│ wasted_spend_terms                                      │
-│ Search Terms                                            │
-│                                                         │
-│ Search terms with 10+ clicks and zero conversions       │
-│                                                         │
-│ When to use: Weekly audit to find negative keyword       │
-│ candidates bleeding budget without converting.           │
-│                                                         │
-│ Query:                                                   │
-│ SELECT search_term_view.search_term, ...                 │
-╰─────────────────────────────────────────────────────────╯
-
-Results:
-┌──────────────────────────────┬────────┬──────────┬─────────────┐
-│ Search Term                  │ Clicks │ Cost     │ Conversions │
-├──────────────────────────────┼────────┼──────────┼─────────────┤
-│ how to mount tv on wall      │     12 │   $45.00 │           0 │
-│ tv mount bracket amazon      │      8 │   $30.00 │           0 │
-│ tv wall mount diy            │     15 │   $56.00 │           0 │
-└──────────────────────────────┴────────┴──────────┴─────────────┘
+  __init__.py       # Package metadata
+  cli.py            # Click CLI commands
+  client.py         # Google Ads API wrapper
+  demo_data.py      # Realistic mock dataset
+  formatter.py      # Table/JSON/CSV output
+  templates.py      # 17 GAQL query templates
+  web.py            # Flask web UI
 ```
 
 ## Author
